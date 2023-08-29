@@ -1,13 +1,7 @@
 package vyosapi
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/adestis-bm/golang-vyos-api/vyosapi/endpointconfiguration"
@@ -22,41 +16,12 @@ func TestVyOSAPIBasic(t *testing.T) {
 
 	t.Logf("ep: %#v", ep)
 
-	jsonRequestBytes := `{
-		"op": "showConfig",
-		"path": ["system","login","user"]
-	}`
-
-	formData := url.Values{
-		"data": []string{jsonRequestBytes},
-		"key":  []string{ep.Key},
+	va := &VyOSAPI{
+		Endpoint:  ep,
+		UserAgent: "golang-vyos-api/test",
 	}
 
-	httpposturl := fmt.Sprintf("%s/retrieve", ep.URL)
-
-	request, err := http.NewRequest("POST", httpposturl, strings.NewReader(formData.Encode()))
-
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("User-Agent", "golang-vyos-api/test")
-
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: ep.InsecureCertificate,
-		},
-	}
-
-	client := &http.Client{
-		Transport: tr,
-	}
-	response, err := client.Do(request)
-	if err != nil {
-		t.Fatalf("client.Do() failed with: %s", err)
-	}
-	defer response.Body.Close()
-
-	t.Logf("status: %s", response.Status)
-
-	jsonResponseBytes, err := io.ReadAll(response.Body)
+	jsonResponseBytes, err := va.Retrieve("system", "login", "user", "bm")
 	if err != nil {
 		t.Fatalf("io.ReadAll() failed with: %s", err)
 	}
