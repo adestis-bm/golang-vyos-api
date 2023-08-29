@@ -3,6 +3,8 @@ package endpointconfiguration
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/adestis-bm/golang-vyos-api/internal/pkg/utils"
 )
 
 // EndpointConfiguration hold necessarry values for VyOS API calls.
@@ -11,11 +13,18 @@ type EndpointConfiguration struct {
 	URL string `json:"url,omitempty"`
 	// Key is the required access token.
 	Key string `json:"key,omitempty"`
+	//InsecureCertificate allows self-signed certificates.
+	InsecureCertificate bool `json:"insecure_certificate,omitempty"`
 }
 
 // LoadFrom tries to read a JSON EndpointConfiguration specified by filename.
 func LoadFrom(filename string) (*EndpointConfiguration, error) {
-	bytes, err := os.ReadFile(filename)
+	fn, err := utils.Check(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := os.ReadFile(fn)
 	if err != nil {
 		return nil, err
 	}
